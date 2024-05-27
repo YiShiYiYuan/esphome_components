@@ -36,24 +36,26 @@ static const uint8_t BL0906_CF_SUM_CNT = 0X39;   // 总有功脉冲计数，无�
 static const uint8_t BL0906_FREQUENCY = 0X4E;    // 总有功脉冲计数，无符号
 static const uint8_t BL0906_TEMPERATURE = 0X5E;  // 总有功脉冲计数，无符号
 // 校正寄存器
-static const uint8_t BL0906_RMSGN_1 = 0x6D;   // 有效值增益调整寄存器地址,通道1
-static const uint8_t BL0906_RMSGN_2 = 0x6E;   // 有效值增益调整寄存器地址,通道2
-static const uint8_t BL0906_RMSGN_3 = 0x6F;   // 有效值增益调整寄存器地址,通道3
-static const uint8_t BL0906_RMSGN_4 = 0x70;   // 有效值增益调整寄存器地址,通道4
-static const uint8_t BL0906_RMSGN_5 = 0x73;   // 有效值增益调整寄存器地址,通道5
-static const uint8_t BL0906_RMSGN_6 = 0x74;   // 有效值增益调整寄存器地址,通道6
-static const uint8_t BL0906_RMSOS_1 = 0x78;   // 有效值偏置校正寄存器地址,通道1
-static const uint8_t BL0906_RMSOS_2 = 0x79;   // 有效值偏置校正寄存器地址,通道2
-static const uint8_t BL0906_RMSOS_3 = 0x7A;   // 有效值偏置校正寄存器地址,通道3
-static const uint8_t BL0906_RMSOS_4 = 0x7B;   // 有效值偏置校正寄存器地址,通道4
-static const uint8_t BL0906_RMSOS_5 = 0x7E;   // 有效值偏置校正寄存器地址,通道5
-static const uint8_t BL0906_RMSOS_6 = 0x7F;   // 有效值偏置校正寄存器地址,通道6
-static const uint8_t BL0906_WATTGN_1 = 0xB7;  // 有功功率增益调整寄存器,通道1
-static const uint8_t BL0906_WATTGN_2 = 0xB8;  // 有功功率增益调整寄存器,通道2
-static const uint8_t BL0906_WATTGN_3 = 0xB9;  // 有功功率增益调整寄存器,通道3
-static const uint8_t BL0906_WATTGN_4 = 0xBA;  // 有功功率增益调整寄存器,通道4
-static const uint8_t BL0906_WATTGN_5 = 0xBD;  // 有功功率增益调整寄存器,通道5
-static const uint8_t BL0906_WATTGN_6 = 0xBE;  // 有功功率增益调整寄存器,通道6
+static const uint8_t BL0906_RMSGN_1 = 0x6D;     // 有效值增益调整寄存器地址,通道1
+static const uint8_t BL0906_RMSGN_2 = 0x6E;     // 有效值增益调整寄存器地址,通道2
+static const uint8_t BL0906_RMSGN_3 = 0x6F;     // 有效值增益调整寄存器地址,通道3
+static const uint8_t BL0906_RMSGN_4 = 0x70;     // 有效值增益调整寄存器地址,通道4
+static const uint8_t BL0906_RMSGN_5 = 0x73;     // 有效值增益调整寄存器地址,通道5
+static const uint8_t BL0906_RMSGN_6 = 0x74;     // 有效值增益调整寄存器地址,通道6
+static const uint8_t BL0906_RMSOS_1 = 0x78;     // 有效值偏置校正寄存器地址,通道1
+static const uint8_t BL0906_RMSOS_2 = 0x79;     // 有效值偏置校正寄存器地址,通道2
+static const uint8_t BL0906_RMSOS_3 = 0x7A;     // 有效值偏置校正寄存器地址,通道3
+static const uint8_t BL0906_RMSOS_4 = 0x7B;     // 有效值偏置校正寄存器地址,通道4
+static const uint8_t BL0906_RMSOS_5 = 0x7E;     // 有效值偏置校正寄存器地址,通道5
+static const uint8_t BL0906_RMSOS_6 = 0x7F;     // 有效值偏置校正寄存器地址,通道6
+static const uint8_t BL0906_RST_ENG = 0x9D;     // 能量清零设置寄存器
+static const uint8_t BL0906_SOFT_RESET = 0x9F;  // 输入为 5A5A5A 时，系统复位
+static const uint8_t BL0906_WATTGN_1 = 0xB7;    // 有功功率增益调整寄存器,通道1
+static const uint8_t BL0906_WATTGN_2 = 0xB8;    // 有功功率增益调整寄存器,通道2
+static const uint8_t BL0906_WATTGN_3 = 0xB9;    // 有功功率增益调整寄存器,通道3
+static const uint8_t BL0906_WATTGN_4 = 0xBA;    // 有功功率增益调整寄存器,通道4
+static const uint8_t BL0906_WATTGN_5 = 0xBD;    // 有功功率增益调整寄存器,通道5
+static const uint8_t BL0906_WATTGN_6 = 0xBE;    // 有功功率增益调整寄存器,通道6
 
 void BL0906::loop() {
   //
@@ -63,11 +65,9 @@ void BL0906::setup() {
   // 此处可校正BL0906电参数。
   while (this->available())
     this->flush();
-  this->write_array(
-      USR_WRPROT_Witable,
-      sizeof(
-          USR_WRPROT_Witable));  // 用户寄存器可操作指令
-                                 // 电参数校正（参数1：寄存器地址；参数2：校正前值；参数3：校正后值、电参数值与寄存器值的转换系数)
+
+  this->write_array(USR_WRPROT_Witable, sizeof(USR_WRPROT_Witable));  // 用户寄存器可操作指令
+  // 电参数校正（参数1：寄存器地址；参数2：校正前值；参数3：校正后值、电参数值与寄存器值的转换系数)
   Bias_correction(BL0906_RMSOS_1, 0.01800, 0);  // 电流有效值偏置校正，通道1
   Bias_correction(BL0906_RMSOS_2, 0.02700, 0);  // 电流有效值偏置校正，通道2
   Bias_correction(BL0906_RMSOS_3, 0.02900, 0);  // 电流有效值偏置校正，通道3
@@ -92,6 +92,7 @@ void BL0906::setup() {
 void BL0906::update() {
   while (this->available())
     this->flush();
+
   read_data(BL0906_FREQUENCY, frequency_reference_, frequency_sensor_);        // 频率
   read_data(BL0906_TEMPERATURE, temperature_reference_, temperature_sensor_);  // 温度
   read_data(BL0906_V_RMS, voltage_reference_, voltage_sensor_);                // 电压
@@ -120,6 +121,28 @@ void BL0906::update() {
 // 校验和。SUM 字节为（Addr+Data_L+Data_M+Data_H）&0xFF 取反
 uint8_t bl0906_checksum(const uint8_t address, const DataPacket *data) {
   return (address + data->l + data->m + data->h) ^ 0xFF;
+}
+
+void BL0906::reset_energy_() {
+  this->write_array(USR_WRPROT_Witable, sizeof(USR_WRPROT_Witable));  // 用户寄存器可操作指令
+
+  // Bit[12:0]设置为 1 时，电能相关寄存器 Reg3B~2F 设置为读后清零。
+  uint8_t address = BL0906_RST_ENG;
+  DataPacket data = {};
+  data.h = 0;
+  data.m = 0x0F;
+  data.l = 0xFF;
+  data.address = address;
+  data.checksum = bl0906_checksum(address, &data);
+
+  ESP_LOGW(TAG, "RMSOS:%02X%02X%02X%02X%02X%02X", BL0906_WRITE_COMMAND, address, data.l, data.m, data.h, data.address);
+  this->write_byte(BL0906_WRITE_COMMAND);
+  this->write_byte(address);
+  this->write_byte(data.l);  // Bit[7:0]
+  this->write_byte(data.m);  // Bit[12:8]
+  this->write_byte(data.h);
+  this->write_byte(data.checksum);
+  this->write_array(USR_WRPROT_Onlyread, sizeof(USR_WRPROT_Onlyread));  // 用户寄存器只读指令
 }
 
 // 读取数据
@@ -193,6 +216,7 @@ void BL0906::read_data(const uint8_t address, const float reference, sensor::Sen
         ;
     }
   }
+
   // 读取频率
   if (reference == frequency_reference_) {
     this->write_byte(BL0906_READ_COMMAND);
@@ -213,6 +237,7 @@ void BL0906::read_data(const uint8_t address, const float reference, sensor::Sen
         ;
     }
   }
+
   // 读取芯片温度
   if (reference == temperature_reference_) {
     this->write_byte(BL0906_READ_COMMAND);
@@ -235,6 +260,7 @@ void BL0906::read_data(const uint8_t address, const float reference, sensor::Sen
     }
   }
 }
+
 // 有效值偏置校正
 void BL0906::Bias_correction(const uint8_t address, const float measurements, const float Correction) {
   DataPacket data;

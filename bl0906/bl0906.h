@@ -12,27 +12,27 @@ namespace bl0906 {
 // https://www.belling.com.cn/media/file_object/bel_product/BL0906/datasheet/BL0906_V1.02_cn.pdf
 
 static const float BL0906_WATT = 16 * 1.097 * 1.097 * (20000 + 20000 + 20000 + 20000 + 20000) /
-                                 (40.41259 * ((5.1 + 5.1) * 1000 / 2000) * 1 * 100 * 1 * 1000);  //总功率转换*16
+                                 (40.41259 * ((5.1 + 5.1) * 1000 / 2000) * 1 * 100 * 1 * 1000);  // 总功率转换*16
 
 static const float BL0906_CF = 16 * 4194304 * 0.032768 * 16 /
                                (3600000 * 16 *
                                 (40.4125 * ((5.1 + 5.1) * 1000 / 2000) * 1 * 100 * 1 * 1000 /
-                                 (1.097 * 1.097 * (20000 + 20000 + 20000 + 20000 + 20000))));  //总电量转换*16
+                                 (1.097 * 1.097 * (20000 + 20000 + 20000 + 20000 + 20000))));  // 总电量转换*16
 
-static const float BL0906_FREF = 10000000;        //频率转换
-static const float BL0906_TREF = 12.5 / 59 - 40;  //温度转换 内部温度=（TPS-64）*12.5/59-40 （℃）
-static const float BL0906_IREF = 1.097 / (12875 * 1 * (5.1 + 5.1) * 1000 / 2000);  //电流值转换
+static const float BL0906_FREF = 10000000;        // 频率转换
+static const float BL0906_TREF = 12.5 / 59 - 40;  // 温度转换 内部温度=（TPS-64）*12.5/59-40 （℃）
+static const float BL0906_IREF = 1.097 / (12875 * 1 * (5.1 + 5.1) * 1000 / 2000);  // 电流值转换
 static const float BL0906_UREF =
-    1.097 * (20000 + 20000 + 20000 + 20000 + 20000) / (13162 * 1 * 100 * 1000);  //电压值转换
+    1.097 * (20000 + 20000 + 20000 + 20000 + 20000) / (13162 * 1 * 100 * 1000);  // 电压值转换
 static const float BL0906_PREF = 1.097 * 1.097 * (20000 + 20000 + 20000 + 20000 + 20000) /
-                                 (40.41259 * ((5.1 + 5.1) * 1000 / 2000) * 1 * 100 * 1 * 1000);  //功率值转换
+                                 (40.41259 * ((5.1 + 5.1) * 1000 / 2000) * 1 * 100 * 1 * 1000);  // 功率值转换
 static const float BL0906_EREF = 4194304 * 0.032768 * 16 /
                                  (3600000 * 16 *
                                   (40.4125 * ((5.1 + 5.1) * 1000 / 2000) * 1 * 100 * 1 * 1000 /
-                                   (1.097 * 1.097 * (20000 + 20000 + 20000 + 20000 + 20000))));  //电量值转换
-static const float BL0906_ki = 12875 * 1 * (5.1 + 5.1) * 1000 / 2000 / 1.097;                    //电流系数
+                                   (1.097 * 1.097 * (20000 + 20000 + 20000 + 20000 + 20000))));  // 电量值转换
+static const float BL0906_ki = 12875 * 1 * (5.1 + 5.1) * 1000 / 2000 / 1.097;                    // 电流系数
 static const float BL0906_Kp = 40.4125 * ((5.1 + 5.1) * 1000 / 2000) * 1 * 100 * 1 * 1000 / 1.097 / 1.097 /
-                               (20000 + 20000 + 20000 + 20000 + 20000);  //功率系数
+                               (20000 + 20000 + 20000 + 20000 + 20000);  // 功率系数
 // 注意：字节顺序为大端模式(big
 // endian)：数据的高位字节保存在内存的低地址中，而低位字节保存在内存的高地址中。（低-中-高）
 
@@ -55,6 +55,8 @@ struct sbe24_t {  // NOLINT(readability-identifier-naming,altera-struct-pack-ali
   uint8_t m;
   int8_t h;
 } __attribute__((packed));
+
+template<typename... Ts> class ResetEnergyAction;
 
 class BL0906 : public PollingComponent, public uart::UARTDevice {
  public:
@@ -88,6 +90,8 @@ class BL0906 : public PollingComponent, public uart::UARTDevice {
   // void dump_config() override;
 
  protected:
+  template<typename... Ts> friend class ResetEnergyAction;
+
   sensor::Sensor *voltage_sensor_{nullptr};
   sensor::Sensor *current_sensor_1_{nullptr};
   sensor::Sensor *current_sensor_2_{nullptr};
@@ -127,22 +131,38 @@ class BL0906 : public PollingComponent, public uart::UARTDevice {
   // 乘以该值以转换为实际电量值 (kWh)
   float energy_reference_ = BL0906_EREF;
 
-  float frequency_reference_ = BL0906_FREF;  //频率转换.Hz
+  float frequency_reference_ = BL0906_FREF;  // 频率转换.Hz
 
-  float temperature_reference_ = BL0906_TREF;  //内部温度。℃
+  float temperature_reference_ = BL0906_TREF;  // 内部温度。℃
 
   static uint32_t to_uint32_t(ube24_t input);
 
   static int32_t to_int32_t(sbe24_t input);
 
-  //读取数据
+  // 能量清零设置
+  void reset_energy_();
+
+  // 读取数据
   void read_data(const uint8_t address, const float reference, sensor::Sensor *sensor_);
-  //偏置校正
+  // 偏置校正
   void Bias_correction(const uint8_t address, const float measurements, const float Correction);
-  //增益调整
+  // 增益调整
   void gain_correction(const uint8_t address, const float measurements, const float Correction,
                        const float coefficient);
   void received_package_(const DataPacket *data) const;
+};
+
+template<typename... Ts> class ResetEnergyAction : public Action<Ts...> {
+ public:
+  ResetEnergyAction(BL0906 *bl0906) : bl0906_(bl0906) {}
+
+  void play(Ts... x) override {
+    this->bl0906_->addActionCallBack(&BL0906::reset_energy_);
+    // ESP_LOGI("ResetEnergyAction", "BL0906 addActionCallBack,[reset_energy_]");
+  }
+
+ protected:
+  BL0906 *bl0906_;
 };
 }  // namespace bl0906
 }  // namespace esphome
