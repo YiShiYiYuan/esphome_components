@@ -57,9 +57,7 @@ static const uint8_t BL0906_WATTGN_4 = 0xBA;    // 有功功率增益调整寄�
 static const uint8_t BL0906_WATTGN_5 = 0xBD;    // 有功功率增益调整寄存器,通道5
 static const uint8_t BL0906_WATTGN_6 = 0xBE;    // 有功功率增益调整寄存器,通道6
 
-void BL0906::loop() {
-  //
-}
+void BL0906::loop() { handleActionCallback(); }
 
 void BL0906::setup() {
   // 此处可校正BL0906电参数。
@@ -121,6 +119,34 @@ void BL0906::update() {
 // 校验和。SUM 字节为（Addr+Data_L+Data_M+Data_H）&0xFF 取反
 uint8_t bl0906_checksum(const uint8_t address, const DataPacket *data) {
   return (address + data->l + data->m + data->h) ^ 0xFF;
+}
+
+int BL0906::addActionCallBack(ActionCallbackFuncPtr ptrFunc) {
+  m_vecActionCallback.push_back(ptrFunc);
+  return m_vecActionCallback.size();
+}
+
+void BL0906::handleActionCallback() {
+  if (m_vecActionCallback.size() == 0) {
+    return;
+  }
+  ActionCallbackFuncPtr ptrFunc = nullptr;
+  for (int i = 0; i < m_vecActionCallback.size(); i++) {
+    ptrFunc = m_vecActionCallback[i];
+    if (ptrFunc) {
+      ESP_LOGI(TAG, "BL0906 handleActionCallback[%d]...", i);
+      (this->*ptrFunc)();
+    }
+  }
+
+  while (this->available()) {
+    this->read();
+  }
+
+  m_vecActionCallback.clear();
+  if (m_process_state != PROCESS_DONE) {
+    m_process_state = PROCESS_DONE;
+  }
 }
 
 void BL0906::reset_energy_() {

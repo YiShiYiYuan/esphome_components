@@ -1,6 +1,8 @@
 #pragma once
 
+#include "esphome/core/automation.h"
 #include "esphome/core/component.h"
+#include "esphome/core/datatypes.h"
 #include "esphome/components/uart/uart.h"
 #include "esphome/components/sensor/sensor.h"
 
@@ -56,7 +58,11 @@ struct sbe24_t {  // NOLINT(readability-identifier-naming,altera-struct-pack-ali
   int8_t h;
 } __attribute__((packed));
 
+typedef enum process_state_ { PROCESS_DONE = 0 } process_state;
+
 template<typename... Ts> class ResetEnergyAction;
+class BL0906;
+typedef void (BL0906::*ActionCallbackFuncPtr)(void);
 
 class BL0906 : public PollingComponent, public uart::UARTDevice {
  public:
@@ -90,6 +96,7 @@ class BL0906 : public PollingComponent, public uart::UARTDevice {
   // void dump_config() override;
 
  protected:
+  process_state m_process_state{PROCESS_DONE};
   template<typename... Ts> friend class ResetEnergyAction;
 
   sensor::Sensor *voltage_sensor_{nullptr};
@@ -150,6 +157,13 @@ class BL0906 : public PollingComponent, public uart::UARTDevice {
   void gain_correction(const uint8_t address, const float measurements, const float Correction,
                        const float coefficient);
   void received_package_(const DataPacket *data) const;
+
+  int addActionCallBack(ActionCallbackFuncPtr ptrFunc);
+  void handleActionCallback();
+  bool isNeedHandleActionCallback() { return (m_vecActionCallback.size() > 0); }
+
+ private:
+  std::vector<ActionCallbackFuncPtr> m_vecActionCallback{};
 };
 
 template<typename... Ts> class ResetEnergyAction : public Action<Ts...> {
