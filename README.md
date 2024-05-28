@@ -12,6 +12,8 @@ feature:
 
 ## sy7t609
 
+BBS: https://bbs.hassbian.com/thread-23734-1-1.html
+
 https://github.com/shzlww/esphome_custom_components@dev
 
 usage:
