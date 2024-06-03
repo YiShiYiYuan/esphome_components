@@ -52,7 +52,7 @@ static const uint8_t BL0906_RMSOS_4 = 0x7B;  // 有效值偏置校正寄存器�
 static const uint8_t BL0906_RMSOS_5 = 0x7E;  // 有效值偏置校正寄存器地址,通道5
 static const uint8_t BL0906_RMSOS_6 = 0x7F;  // 有效值偏置校正寄存器地址,通道6
 
-static const uint8_t BL0906_RST_ENG = 0x9D;     // 能量清零设置寄存器
+// static const uint8_t BL0906_RST_ENG = 0x9D;     // 能量读后清零设置寄存器
 static const uint8_t BL0906_USR_WRPROT = 0x9E;  // 用户写保护设置寄存器
 static const uint8_t BL0906_SOFT_RESET = 0x9F;  // 输入为 5A5A5A 时，系统复位
 
@@ -167,12 +167,12 @@ void BL0906::handleActionCallback() {
 }
 
 void BL0906::reset_energy_() {
-  const uint8_t BL0906_RST[6] = {BL0906_WRITE_COMMAND, BL0906_RST_ENG, 0x00, 0x00, 0x00, 0x62};
-  this->write_array(BL0906_RST, 6);
+  this->write_array(BL0906_INIT[0], 6);
   delay(1);
   this->flush();
 
-  ESP_LOGW(TAG, "RMSOS:%02X%02X%02X%02X%02X%02X", BL0906_WRITE_COMMAND, BL0906_RST_ENG, 0xFF, 0x0F, 0x00, 0x54);
+  ESP_LOGW(TAG, "RMSOS:%02X%02X%02X%02X%02X%02X", BL0906_INIT[0][0], BL0906_INIT[0][1], BL0906_INIT[0][2],
+           BL0906_INIT[0][3], BL0906_INIT[0][4], BL0906_INIT[0][5]);
 }
 
 // 读取数据
