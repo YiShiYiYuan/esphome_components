@@ -1,0 +1,52 @@
+text_sensor:
+  - platform: wifi_info
+    ip_address:
+      name: "sensor-IP"
+      id: id_sensor_ip
+      update_interval: 30s
+    ssid:
+      name: "sensor-SSID"
+      id: id_sensor_ssid
+      update_interval: 30s
+    bssid:
+      name: "sensor-BSSID"
+      id: id_sensor_bssid
+      update_interval: 30s
+    mac_address:
+      name: "sensor-MAC"
+      id: id_sensor_mac
+
+sensor:
+  - platform: uptime
+    name: "sensor-Uptime"
+    id: id_sensor_uptime_raw
+    entity_category: diagnostic
+    update_interval: 60s
+    internal: false
+    # on_raw_value:
+    #   then:
+    #     - text_sensor.template.publish:
+    #       id: id_sensor_uptime
+    #       state: !lambda |-
+    #         int seconds = round(id(id_sensor_uptime_raw).raw_state);
+    #         int days = seconds / (24 * 3600);
+    #         seconds = seconds % (24 * 3600);
+    #         int hours = seconds / 3600;
+    #         seconds = seconds % 3600;
+    #         int minutes = seconds /  60;
+    #         seconds = seconds % 60;
+    #         return (
+    #           (days ? String(days) + "d " : "") +
+    #           (hours ? String(hours) + "h " : "") +
+    #           (minutes ? String(minutes) + "m " : "") +
+    #           (String(seconds) + "s")
+    #         ).c_str();
+  - platform: wifi_signal
+    name: "sensor-WifiSignal"
+    id: id_sensor_wifisignal
+    update_interval: 60s
+
+binary_sensor:
+  - platform: status
+    name: "sensor-LinkStatus"
+    id: id_sensor_linkstatus

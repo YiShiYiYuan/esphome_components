@@ -1,0 +1,474 @@
+substitutions:
+  node_name: "powerboard-test"
+
+  # ######只需要修改上面的node_name,下面的内容无需改动######
+  # 节点其他信息
+  node_name_friendly: ${node_name}
+  node_name_add_mac_suffix: "false"
+  node_project_name: "CMCC.CMPOWER-W1"
+  node_project_version: "v4.0.0"
+  node_build_min_version: "2023.12.0"
+
+  # GPIO定义
+  button_pin: GPIO4
+  relay_master_pin: GPIO0
+  relay_slave_pin: GPIO12
+  relay_enable_pin: GPIO15
+  led_blue_pin: GPIO16
+  led_red_pin: GPIO14
+  led_white_pin: GPIO5
+
+packages:
+  common: !include 1-common-esp8266-4m-lite.yaml
+  common-component: !include 1-common-component.yaml
+  debug-component: !include 1-debug-component.yaml
+  # webserver-component: !include 1-webserver-component.yaml
+esp8266:
+  restore_from_flash: true
+
+preferences:
+  flash_write_interval: 1min
+
+external_components:
+  # ###local mode####
+  # - source:
+  #     type: local
+  #     path: components
+  #   components: [sy7t609]
+  # ###git mode######
+  - source: github://shzlww/esphome_custom_components@dev
+    components: [sy7t609]
+
+wifi:
+  # 使用use_address对使用mac地址修饰esphome:name的设备进行ota
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+  fast_connect: true
+  reboot_timeout: 0s
+  on_connect:
+    - light.turn_on: id_led_blue
+  on_disconnect:
+    - light.turn_off: id_led_blue
+  ap:
+    ap_timeout: 60s
+logger:
+  level: DEBUG
+  logs:
+    sensor: NONE
+  baud_rate: 0
+output:
+  # 主、从继电器触发引脚
+  - platform: gpio
+    id: id_pin_trigger_relay_enable
+    pin:
+      number: ${relay_enable_pin}
+      inverted: true
+
+  # 主继电器
+  - platform: gpio
+    id: id_pin_relay_master
+    pin:
+      number: ${relay_master_pin}
+      inverted: true
+
+  # 从继电器
+  - platform: gpio
+    id: id_pin_relay_slave
+    pin:
+      number: ${relay_slave_pin}
+      inverted: true
+
+  # 白色led
+  - platform: esp8266_pwm
+    id: id_pin_led_white
+    pin:
+      number: ${led_white_pin}
+      inverted: true
+
+  # 蓝色led
+  - platform: esp8266_pwm
+    id: id_pin_led_blue
+    pin:
+      number: ${led_blue_pin}
+      inverted: true
+
+  # 红色led
+  - platform: esp8266_pwm
+    id: id_pin_led_red
+    pin:
+      number: ${led_red_pin}
+      inverted: true
+
+light:
+  # 白色led(分路继电器的状态)
+  - platform: monochromatic
+    name: light-Led White
+    id: id_led_white
+    output: id_pin_led_white
+    restore_mode: ALWAYS_OFF
+    default_transition_length: 0s
+    internal: true
+  # 蓝灯常亮-wifi已连接
+  # 蓝灯灯闪烁-配网模式
+  # 红灯闪烁，蓝灯熄灭-wifi未连接
+  # 蓝色led(wifi状态)
+  - platform: monochromatic
+    name: light-Led Blue
+    id: id_led_blue
+    output: id_pin_led_blue
+    restore_mode: ALWAYS_OFF
+    default_transition_length: 0s
+    internal: true
+
+  # 红色led(wifi状态与配网状态)
+  - platform: status_led
+    name: light-Led Red
+    id: id_led_red
+    output: id_pin_led_red
+    internal: true
+
+  # 红蓝灯合并（后期实现彩色status_led）
+  # - platform: cwww
+  #   name: "light-CWWW Status Led "
+  #   cold_white: pin_led_blue
+  #   warm_white: pin_led_red
+  #   cold_white_color_temperature: 6536 K
+  #   warm_white_color_temperature: 2000 K
+  #   constant_brightness: true
+  #   restore_mode: ALWAYS_OFF
+  #   default_transition_length: 0s
+  #   effects:
+  #     - pulse:
+  #         name: "fast"
+  #         transition_length: 0ms
+  #         update_interval: 100ms
+
+button:
+  # 实现一个电平反转，触发继电器动作
+  - platform: output
+    # name: button-Relay Trigger
+    id: id_trigger_relay_enable
+    output: id_pin_trigger_relay_enable
+    duration: 10ms
+    internal: true
+
+  # 重置计量芯片寄存器上的电度量
+  - platform: template
+    name: adv-ResetEnergyTotal
+    id: id_button_reset_energy_total
+    entity_category: config
+    on_press:
+      then:
+        - globals.set:
+            id: id_energy_counter_persist
+            value: '0.0'
+        - sy7t609.reset_energy: id_sensor_sy7t609
+
+  # 重置esp计算的的每日电度量
+  - platform: template
+    name: adv-ResetEnergyDaily
+    id: id_button_reset_energy_daily
+    entity_category: config
+    on_press:
+      then:
+        - lambda: |-
+            id(id_total_daily_energy_median).publish_state_and_save(0.0f);
+
+  # 重置校准寄存器信息
+  - platform: template
+    name: adv-ResetCalibration
+    id: id_button_reset_calibration
+    entity_category: config
+    on_press:
+      then:
+        - sy7t609.reset_calibration: id_sensor_sy7t609
+
+  # 打印调试信息
+  # - platform: template
+  #   name: adv-PrintRegister
+  #   id: id_button_debug
+  #   entity_category: config
+  #   on_press:
+  #     then:
+  #       - if:
+  #           condition:
+  #             switch.is_on: id_switch_operate_confirm
+  #           then:
+  #             - sy7t609.debug: id_sensor_sy7t609
+  #             - switch.turn_off: id_switch_operate_confirm
+
+switch:
+  # 重置系统(并且所有电度量)
+  - platform: template
+    name: "system-FactoryReset-WithEnergyCounter"
+    id: id_factoryreset_with_energy_counter
+    optimistic: true
+    restore_mode: ALWAYS_OFF
+    entity_category: config
+    on_turn_on:
+      then:
+        - sy7t609.reset_energy: id_sensor_sy7t609
+        - delay: 20ms   # 确保uart命令可以执行成功
+        - lambda: |-
+            id(id_energy_counter_persist) = 0.0f;
+            id(id_total_daily_energy_median).publish_state_and_save(0.0f);
+        - switch.toggle: id_factoryreset
+
+  # - platform: template
+  #   name: adv-Confirm
+  #   id: id_switch_operate_confirm
+  #   optimistic: true
+  #   restore_mode: ALWAYS_OFF
+  #   entity_category: config
+
+  # 插排按钮-逻辑开关
+  # - platform: template
+  #   name: switch-Power Key
+  #   id: id_power_key_logic
+  #   lambda: |-
+  #     return id(id_relay_master_real).state;
+  #   restore_mode: DISABLED
+  #   internal: true
+  #   turn_on_action:
+  #     - lambda: |-
+  #         auto strMode = id(id_select_key_button_mode).state;
+  #         id(id_relay_master_logic).turn_on();
+  #         //此模式下使用继电器默认记忆状态
+  #         if("smart" == strMode)
+  #         {
+  #           return;
+  #         }
+  #         //普通插排的逻辑，电源键全开或全关
+  #         if("normal" == strMode)
+  #         {
+  #           id(id_relay_slave_logic).turn_on();
+  #           return;
+  #         }
+
+  #   turn_off_action:
+  #     - lambda: |-
+  #         auto strMode = id(id_select_key_button_mode).state;
+  #         id(id_relay_master_logic).turn_off();
+  #         //此模式下使用继电器的记忆状态
+  #         if("smart" == strMode)
+  #         {
+  #           return;
+  #         }
+  #         //普通插排的逻辑，电源键全开或全关
+  #         if("normal" == strMode)
+  #         {
+  #           id(id_relay_slave_logic).turn_off();
+  #           return;
+  #         }
+
+  # 由于两个继电器可以由esp芯片独立控制，可能会出现这种场景：[主继电器]断开，[从继电器]打开，homeassistant显示[从继电器]是开启状态，但是此时[从继电器]的线路是没有电的；
+  # 为了避免出现这种令人疑惑的场景，增加逻辑开关。
+  #   使用逻辑开关，控制[从继电器]的实际通电状态：
+  #   从继电器接通且主继电器接通，白色指示灯点亮
+  #   从继电器断开或者主继电器断开，白色指示灯熄灭
+
+  # 主继电器-逻辑开关
+  - platform: template
+    name: switch-Relay Master
+    id: id_relay_master_logic
+    lambda: |-
+      return id(id_relay_master_real).state;
+    restore_mode: DISABLED
+    turn_on_action:
+      - switch.turn_on: id_relay_master_real
+    turn_off_action:
+      - switch.turn_off: id_relay_master_real
+
+  # 从继电器-逻辑开关
+  - platform: template
+    name: switch-Relay Slave
+    id: id_relay_slave_logic
+    lambda: |-
+      return id(id_relay_master_real).state && id(id_relay_slave_real).state;
+    restore_mode: DISABLED
+    turn_on_action:
+      - switch.turn_on: id_relay_slave_real
+      - switch.turn_on: id_relay_master_real
+    turn_off_action:
+      - switch.turn_off: id_relay_slave_real
+  # 主继电器-真实开关
+  - platform: output
+    # name: switch-Relay Master Real
+    id: id_relay_master_real
+    output: id_pin_relay_master
+    restore_mode: RESTORE_DEFAULT_OFF
+    # restore_mode: ALWAYS_ON
+    on_turn_on:
+      - button.press: id_trigger_relay_enable
+      - lambda: |-
+          if(id(id_relay_slave_real).state)  id(id_led_white).turn_on().perform();
+    on_turn_off:
+      - button.press: id_trigger_relay_enable
+      - lambda: |-
+          id(id_led_white).turn_off().perform();
+    internal: true
+
+  # 从继电器-真实开关
+  # internal-true 对前端隐藏，使用relay_slave_logic 代替直接控制 relay_slave_real
+  - platform: output
+    # name: switch-Relay slave Real
+    id: id_relay_slave_real
+    output: id_pin_relay_slave
+    restore_mode: RESTORE_DEFAULT_OFF
+    # restore_mode: ALWAYS_ON
+    on_turn_on:
+      - button.press: id_trigger_relay_enable
+      - lambda: |-
+          if(id(id_relay_master_real).state)  id(id_led_white).turn_on().perform();
+    on_turn_off:
+      - button.press: id_trigger_relay_enable
+      - lambda: |-
+          id(id_led_white).turn_off().perform();
+    internal: true
+
+# 插排电源按钮
+binary_sensor:
+  - platform: gpio
+    # name: button-Power Key Real
+    id: id_power_key
+    internal: true
+    pin:
+      number: ${button_pin}
+      inverted: true
+      mode:
+        input: true
+        pullup: true
+    # 插排电源按钮单击、长按功能
+    on_multi_click:
+      # 长按5s以上，重置为出厂模式，进入配网状态
+      - timing:
+          - ON for at least 5s
+        then:
+          # - logger.log: "Long press."
+          - switch.turn_on: id_factoryreset_with_energy_counter
+        invalid_cooldown: 0s
+      # 双击
+      - timing:
+          - ON for at most 0.5s
+          - OFF for at most 0.5s
+          - ON for at most 0.5s
+          - OFF for at least 0.2s
+        then:
+          - switch.toggle: id_relay_slave_logic
+        invalid_cooldown: 0s
+      # 单击
+      - timing:
+          - ON for at most 0.3s
+          - OFF for at least 0.2s
+        then:
+          - switch.toggle: id_relay_master_logic
+        invalid_cooldown: 0s
+# 物理按键：智能模式与普通模式
+# select:
+#  - platform: template
+#    name: select-Key Button Mode
+#    id: id_select_key_button_mode
+#    options:
+#     - "normal" # 普通模式，一键强制全开或全关
+#     - "smart" # 智能模式，只操作主继电器，不改变[从继电器]以前的状态
+#    initial_option: "smart"
+#    optimistic: true
+#    restore_value: true
+#    entity_category: config
+time:
+  - platform: homeassistant
+    id: id_homeassistant_time
+    timezone: "Asia/Shanghai"
+
+uart:
+  tx_pin: 1
+  rx_pin: 3
+  baud_rate: 9600
+  stop_bits: 1
+  data_bits: 8
+  parity: NONE
+
+sensor:
+  - platform: sy7t609
+    id: id_sensor_sy7t609
+    power_factor:
+      name: "energy-Power Factor"
+      id: id_sensor_pf
+    voltage:
+      name: "energy-Voltage"
+      id: id_sensor_voltage
+    current:
+      name: "energy-Current"
+      id: id_sensor_current
+    power:
+      name: "energy-Power"
+      id: id_sensor_power
+    reactive_power:
+      name: "energy-Reactive Power"
+      id: id_sensor_reactive_power
+    energy:
+      name: "energy-Energy Counter"
+      id: id_sensor_energy
+    frequency:
+      name: "energy-Frequency"
+      id: id_sensor_frequency
+    chip_temperature:
+      name: "energy-Chip Temperature"
+      id: id_sensor_chip_temperature
+    update_interval: 3s
+
+  - platform: total_daily_energy
+    name: "energy-DailyEnergy"
+    id: id_total_daily_energy_median
+    power_id: id_sensor_power
+    accuracy_decimals: 2
+    device_class: "energy"
+    state_class: "total_increasing"
+    icon: "mdi:counter"
+    restore: true
+    unit_of_measurement: Wh
+
+  # 功率传感器(power)的副本，使用中值滤波器，过滤掉异常抖动的数据，缺点就是需要缓存采集的数据，状态反馈慢。可用作homeassistant中能源统计的功率。
+  # 1.中值滤波是一种非线性数字滤波器技术，经常用于去除图像或者其它信号中的噪声。
+  # 2.检查输入信号中的采样并判断它是否代表了信号，使用奇数个采样组成的观察窗实现这项功能。
+  # 3.观察窗口中的数值进行排序，位于观察窗中间的中值作为输出。
+  # 4.然后丢弃最早的值，取得新的采样，重复上面的计算过程。
+  # - platform: copy
+  #   name: energy-MedianPower
+  #   id: id_energy_median_power
+  #   source_id: id_sensor_power
+  #   filters:
+  #     - median:
+  #         window_size: 5
+  #         send_every: 3
+  #         send_first_at: 3
+
+  # 电度量数据持久化存储到esp芯片的flash中，实现断电记忆电度量
+  - platform: copy
+    name: energy-Energy Counter(Persist)
+    id: id_sensor_energy_counter_persist
+    source_id: id_sensor_energy
+    filters:
+      - lambda: |-
+          if(x < id(id_energy_counter_persist))
+          {
+            float delta =  x - id(id_energy_counter_lastvalue);
+            id(id_energy_counter_persist) += delta;
+            id(id_energy_counter_lastvalue) = x;
+          }
+          else
+          {
+            id(id_energy_counter_persist) = x;
+          }
+          return id(id_energy_counter_persist);
+
+# 计量芯片sy7t609的电度量计数器是内存存储的，断电会丢失，因此使用esp的全局变量存储电度量
+globals:
+  - id: id_energy_counter_persist
+    type: float
+    restore_value: yes
+    initial_value: '0.0'
+  - id: id_energy_counter_lastvalue
+    type: float
+    restore_value: no
+    initial_value: '0.0'

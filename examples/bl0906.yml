@@ -1,0 +1,385 @@
+substitutions:
+  name: power-6channel
+  friendly_name: "6-channel power monitor, using BL0906"
+
+esphome:
+  name: ${name}
+  name_add_mac_suffix: true
+  project:
+    name: "Power.6channels"
+    version: "1.0.0"
+
+esp8266:
+  board: nodemcuv2
+
+preferences:
+  flash_write_interval: 5min
+
+external_components:
+  # - source:
+  #     type: local
+  #     path: mycomponents
+  #   components: [bl0906]
+
+  - source: github://yishiyiyuan/esphome_components@v0.0.1
+    components: [bl0906]
+
+  # https://github.com/esphome/issues/issues/5793
+  - source: github://esphome/esphome@2024.4.2
+    components: [web_server, web_server_base]
+
+# packages:
+#   debug-component: !include include/debug-component.yaml
+
+# Enable Home Assistant API, disable api key
+api:
+
+web_server:
+  port: 80
+
+ota:
+  password: !secret ota_password
+
+wifi:
+  id: id_wifi
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+  fast_connect: true
+  ap:
+    ssid: ${name}
+    password: !secret ap_password
+
+logger:
+  level: DEBUG
+  logs:
+    sensor: NONE
+  baud_rate: 0
+
+captive_portal:
+
+uart:
+  tx_pin: GPIO1
+  rx_pin: GPIO3
+  baud_rate: 19200
+  id: utt2
+
+sensor:
+  - platform: bl0906
+    id: id_sensor_bl0906
+    # update_interval: 60s
+    frequency:
+      name: 'Frequency'
+    temperature:
+      name: 'Temperature'
+    voltage:
+      name: 'Voltage'
+    current_1:
+      name: 'Current_1'
+    current_2:
+      name: 'Current_2'
+    current_3:
+      name: 'Current_3'
+    current_4:
+      name: 'Current_4'
+    current_5:
+      name: 'Current_5'
+    current_6:
+      name: 'Current_6'
+    power_1:
+      name: 'Power_1'
+    power_2:
+      name: 'Power_2'
+    power_3:
+      name: 'Power_3'
+    power_4:
+      name: 'Power_4'
+    power_5:
+      name: 'Power_5'
+    power_6:
+      name: 'Power_6'
+    power_sum:
+      name: 'Power_sum'
+    energy_1:
+      id: energy_1
+      name: 'Energy_1'
+    energy_2:
+      id: energy_2
+      name: 'Energy_2'
+    energy_3:
+      id: energy_3
+      name: 'Energy_3'
+    energy_4:
+      id: energy_4
+      name: 'Energy_4'
+    energy_5:
+      id: energy_5
+      name: 'Energy_5'
+    energy_6:
+      id: energy_6
+      name: 'Energy_6'
+    energy_sum:
+      id: energy_sum
+      name: 'Energy_sum'
+      # filters:
+      #     - multiply: 0.001
+      #   unit_of_measurement: kW
+
+  - platform: copy
+    name: 'Energy_1'
+    id: Energy_1_persist
+    source_id: energy_1
+    filters:
+      - lambda: |-
+          if(id(id_energy_1_lastvalue) == 0.0)
+          {
+            id(id_energy_1_lastvalue) = id(energy_1).state;
+          }
+
+          if(x < id(id_energy_1_persist))
+          {
+            float delta =  x - id(id_energy_1_lastvalue);
+            id(id_energy_1_persist) += delta;
+            id(id_energy_1_lastvalue) = x;
+          } else {
+            id(id_energy_1_persist) = x;
+          }
+          return id(id_energy_1_persist);
+  - platform: copy
+    name: 'Energy_2'
+    id: Energy_2_persist
+    source_id: energy_2
+    filters:
+      - lambda: |-
+          if(id(id_energy_2_lastvalue) == 0.0)
+          {
+            id(id_energy_2_lastvalue) = id(energy_2).state;
+          }
+
+          if(x < id(id_energy_2_persist))
+          {
+            float delta =  x - id(id_energy_2_lastvalue);
+            id(id_energy_2_persist) += delta;
+            id(id_energy_2_lastvalue) = x;
+          } else {
+            id(id_energy_2_persist) = x;
+          }
+          return id(id_energy_2_persist);
+  - platform: copy
+    name: 'Energy_3'
+    id: Energy_3_persist
+    source_id: energy_3
+    filters:
+      - lambda: |-
+          if(id(id_energy_3_lastvalue) == 0.0)
+          {
+            id(id_energy_3_lastvalue) = id(energy_3).state;
+          }
+
+          if(x < id(id_energy_3_persist))
+          {
+            float delta =  x - id(id_energy_3_lastvalue);
+            id(id_energy_3_persist) += delta;
+            id(id_energy_3_lastvalue) = x;
+          } else {
+            id(id_energy_3_persist) = x;
+          }
+          return id(id_energy_3_persist);
+  - platform: copy
+    name: 'Energy_4'
+    id: Energy_4_persist
+    source_id: energy_4
+    filters:
+      - lambda: |-
+          if(id(id_energy_4_lastvalue) == 0.0)
+          {
+            id(id_energy_4_lastvalue) = id(energy_4).state;
+          }
+
+          if(x < id(id_energy_4_persist))
+          {
+            float delta =  x - id(id_energy_4_lastvalue);
+            id(id_energy_4_persist) += delta;
+            id(id_energy_4_lastvalue) = x;
+          } else {
+            id(id_energy_4_persist) = x;
+          }
+          return id(id_energy_4_persist);
+  - platform: copy
+    name: 'Energy_5'
+    id: Energy_5_persist
+    source_id: energy_5
+    filters:
+      - lambda: |-
+          if(id(id_energy_5_lastvalue) == 0.0)
+          {
+            id(id_energy_5_lastvalue) = id(energy_5).state;
+          }
+
+          if(x < id(id_energy_5_persist))
+          {
+            float delta =  x - id(id_energy_5_lastvalue);
+            id(id_energy_5_persist) += delta;
+            id(id_energy_5_lastvalue) = x;
+          } else {
+            id(id_energy_5_persist) = x;
+          }
+          return id(id_energy_5_persist);
+  - platform: copy
+    name: 'Energy_6'
+    id: Energy_6_persist
+    source_id: energy_6
+    filters:
+      - lambda: |-
+          if(id(id_energy_6_lastvalue) == 0.0)
+          {
+            id(id_energy_6_lastvalue) = id(energy_6).state;
+          }
+
+          if(x < id(id_energy_6_persist))
+          {
+            float delta =  x - id(id_energy_6_lastvalue);
+            id(id_energy_6_persist) += delta;
+            id(id_energy_6_lastvalue) = x;
+          } else {
+            id(id_energy_6_persist) = x;
+          }
+          return id(id_energy_6_persist);
+  - platform: copy
+    name: 'Energy_sum'
+    id: Energy_sum_persist
+    source_id: energy_sum
+    filters:
+      - lambda: |-
+          if(id(id_energy_sum_lastvalue) == 0.0)
+          {
+            id(id_energy_sum_lastvalue) = id(energy_sum).state;
+          }
+
+          if(x < id(id_energy_sum_persist))
+          {
+            float delta =  x - id(id_energy_sum_lastvalue);
+            id(id_energy_sum_persist) += delta;
+            id(id_energy_sum_lastvalue) = x;
+          } else {
+            id(id_energy_sum_persist) = x;
+          }
+          return id(id_energy_sum_persist);
+
+  - platform: total_daily_energy
+    name: 'Daily Energy 1'
+    id: total_daily_energy_1
+    power_id: energy_1
+    unit_of_measurement: 'kWh'
+    state_class: total_increasing
+    device_class: energy
+    restore: true
+    accuracy_decimals: 3
+    filters:
+      # Multiplication factor from W to kW is 0.001
+      - multiply: 0.001
+
+button:
+  #重置esp计算的的每日电度量
+  - platform: template
+    name: ResetEnergyDaily
+    id: id_button_reset_energy_daily
+    entity_category: config
+    on_press:
+      then:
+        - lambda: |-
+            id(total_daily_energy_1).publish_state_and_save(0.0f);
+            id(total_daily_energy_1).publish_state_and_save(0.0f);
+
+  #重置计量芯片寄存器上的电度量
+  - platform: template
+    name: ResetEnergyTotal
+    id: id_button_reset_energy_total
+    entity_category: config
+    on_press:
+      then:
+        - globals.set:
+            id: id_energy_1_persist
+            value: '0.0'
+        - globals.set:
+            id: id_energy_2_persist
+            value: '0.0'
+        - globals.set:
+            id: id_energy_3_persist
+            value: '0.0'
+        - globals.set:
+            id: id_energy_4_persist
+            value: '0.0'
+        - globals.set:
+            id: id_energy_5_persist
+            value: '0.0'
+        - globals.set:
+            id: id_energy_6_persist
+            value: '0.0'
+        - globals.set:
+            id: id_energy_sum_persist
+            value: '0.0'
+        - bl0906.reset_energy: id_sensor_bl0906
+
+# Enable time component to reset energy at midnight
+time:
+  - platform: homeassistant
+    id: homeassistant_time
+    timezone: "Asia/Shanghai"
+
+globals:
+  - id: id_energy_1_persist
+    type: float
+    restore_value: yes
+    initial_value: '0.0'
+  - id: id_energy_1_lastvalue
+    type: float
+    restore_value: no
+    initial_value: '0.0'
+  - id: id_energy_2_persist
+    type: float
+    restore_value: yes
+    initial_value: '0.0'
+  - id: id_energy_2_lastvalue
+    type: float
+    restore_value: no
+    initial_value: '0.0'
+  - id: id_energy_3_persist
+    type: float
+    restore_value: yes
+    initial_value: '0.0'
+  - id: id_energy_3_lastvalue
+    type: float
+    restore_value: no
+    initial_value: '0.0'
+  - id: id_energy_4_persist
+    type: float
+    restore_value: yes
+    initial_value: '0.0'
+  - id: id_energy_4_lastvalue
+    type: float
+    restore_value: no
+    initial_value: '0.0'
+  - id: id_energy_5_persist
+    type: float
+    restore_value: yes
+    initial_value: '0.0'
+  - id: id_energy_5_lastvalue
+    type: float
+    restore_value: no
+    initial_value: '0.0'
+  - id: id_energy_6_persist
+    type: float
+    restore_value: yes
+    initial_value: '0.0'
+  - id: id_energy_6_lastvalue
+    type: float
+    restore_value: no
+    initial_value: '0.0'
+  - id: id_energy_sum_persist
+    type: float
+    restore_value: yes
+    initial_value: '0.0'
+  - id: id_energy_sum_lastvalue
+    type: float
+    restore_value: no
+    initial_value: '0.0'
