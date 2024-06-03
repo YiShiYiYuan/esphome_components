@@ -12,79 +12,93 @@ static const uint8_t BL0906_READ_COMMAND = 0x35;   // 读操作命令
 static const uint8_t BL0906_WRITE_COMMAND = 0xCA;  // 写操作命令
 
 // BL0906寄存器地址
-static const uint8_t BL0906_I_1_RMS = 0x0D;      // 电流 1 通道有效值寄存器地址
-static const uint8_t BL0906_I_2_RMS = 0x0E;      // 电流 2 通道有效值寄存器地址
-static const uint8_t BL0906_I_3_RMS = 0x0F;      // 电流 3 通道有效值寄存器地址
-static const uint8_t BL0906_I_4_RMS = 0x10;      // 电流 4 通道有效值寄存器地址
-static const uint8_t BL0906_I_5_RMS = 0x13;      // 电流 5 通道有效值寄存器地址
-static const uint8_t BL0906_I_6_RMS = 0x14;      // 电流 6 通道有效值寄存器地址
-static const uint8_t BL0906_V_RMS = 0x16;        // 电压通道有效值寄存器
-static const uint8_t BL0906_WATT_1 = 0X23;       // 通道 1 有功功率寄存器
-static const uint8_t BL0906_WATT_2 = 0X24;       // 通道 1 有功功率寄存器
-static const uint8_t BL0906_WATT_3 = 0X25;       // 通道 1 有功功率寄存器
-static const uint8_t BL0906_WATT_4 = 0X26;       // 通道 1 有功功率寄存器
-static const uint8_t BL0906_WATT_5 = 0X29;       // 通道 1 有功功率寄存器
-static const uint8_t BL0906_WATT_6 = 0X2A;       // 通道 1 有功功率寄存器
-static const uint8_t BL0906_WATT_SUM = 0X2C;     // 总有功功率寄存器
-static const uint8_t BL0906_CF_1_CNT = 0X30;     // 通道 1 有功脉冲计数，无符号
-static const uint8_t BL0906_CF_2_CNT = 0X31;     // 通道 1 有功脉冲计数，无符号
-static const uint8_t BL0906_CF_3_CNT = 0X32;     // 通道 1 有功脉冲计数，无符号
-static const uint8_t BL0906_CF_4_CNT = 0X33;     // 通道 1 有功脉冲计数，无符号
-static const uint8_t BL0906_CF_5_CNT = 0X36;     // 通道 1 有功脉冲计数，无符号
-static const uint8_t BL0906_CF_6_CNT = 0X37;     // 通道 1 有功脉冲计数，无符号
-static const uint8_t BL0906_CF_SUM_CNT = 0X39;   // 总有功脉冲计数，无符号
-static const uint8_t BL0906_FREQUENCY = 0X4E;    // 总有功脉冲计数，无符号
-static const uint8_t BL0906_TEMPERATURE = 0X5E;  // 总有功脉冲计数，无符号
+static const uint8_t BL0906_I_1_RMS = 0x0D;   // 电流 1 通道有效值寄存器地址
+static const uint8_t BL0906_I_2_RMS = 0x0E;   // 电流 2 通道有效值寄存器地址
+static const uint8_t BL0906_I_3_RMS = 0x0F;   // 电流 3 通道有效值寄存器地址
+static const uint8_t BL0906_I_4_RMS = 0x10;   // 电流 4 通道有效值寄存器地址
+static const uint8_t BL0906_I_5_RMS = 0x13;   // 电流 5 通道有效值寄存器地址
+static const uint8_t BL0906_I_6_RMS = 0x14;   // 电流 6 通道有效值寄存器地址
+static const uint8_t BL0906_V_RMS = 0x16;     // 电压通道有效值寄存器
+static const uint8_t BL0906_WATT_1 = 0x23;    // 通道 1 有功功率寄存器
+static const uint8_t BL0906_WATT_2 = 0x24;    // 通道 2 有功功率寄存器
+static const uint8_t BL0906_WATT_3 = 0x25;    // 通道 3 有功功率寄存器
+static const uint8_t BL0906_WATT_4 = 0x26;    // 通道 4 有功功率寄存器
+static const uint8_t BL0906_WATT_5 = 0x29;    // 通道 5 有功功率寄存器
+static const uint8_t BL0906_WATT_6 = 0x2A;    // 通道 6 有功功率寄存器
+static const uint8_t BL0906_WATT_SUM = 0x2C;  // 总有功功率寄存器
+
+static const uint8_t BL0906_CF_1_CNT = 0x30;     // 通道 1 有功脉冲计数，无符号
+static const uint8_t BL0906_CF_2_CNT = 0x31;     // 通道 2 有功脉冲计数，无符号
+static const uint8_t BL0906_CF_3_CNT = 0x32;     // 通道 3 有功脉冲计数，无符号
+static const uint8_t BL0906_CF_4_CNT = 0x33;     // 通道 4 有功脉冲计数，无符号
+static const uint8_t BL0906_CF_5_CNT = 0x36;     // 通道 5 有功脉冲计数，无符号
+static const uint8_t BL0906_CF_6_CNT = 0x37;     // 通道 6 有功脉冲计数，无符号
+static const uint8_t BL0906_CF_SUM_CNT = 0x39;   // 总有功脉冲计数，无符号
+static const uint8_t BL0906_FREQUENCY = 0x4E;    // 总有功脉冲计数，无符号
+static const uint8_t BL0906_TEMPERATURE = 0x5E;  // 总有功脉冲计数，无符号
+
 // 校正寄存器
-static const uint8_t BL0906_RMSGN_1 = 0x6D;     // 有效值增益调整寄存器地址,通道1
-static const uint8_t BL0906_RMSGN_2 = 0x6E;     // 有效值增益调整寄存器地址,通道2
-static const uint8_t BL0906_RMSGN_3 = 0x6F;     // 有效值增益调整寄存器地址,通道3
-static const uint8_t BL0906_RMSGN_4 = 0x70;     // 有效值增益调整寄存器地址,通道4
-static const uint8_t BL0906_RMSGN_5 = 0x73;     // 有效值增益调整寄存器地址,通道5
-static const uint8_t BL0906_RMSGN_6 = 0x74;     // 有效值增益调整寄存器地址,通道6
-static const uint8_t BL0906_RMSOS_1 = 0x78;     // 有效值偏置校正寄存器地址,通道1
-static const uint8_t BL0906_RMSOS_2 = 0x79;     // 有效值偏置校正寄存器地址,通道2
-static const uint8_t BL0906_RMSOS_3 = 0x7A;     // 有效值偏置校正寄存器地址,通道3
-static const uint8_t BL0906_RMSOS_4 = 0x7B;     // 有效值偏置校正寄存器地址,通道4
-static const uint8_t BL0906_RMSOS_5 = 0x7E;     // 有效值偏置校正寄存器地址,通道5
-static const uint8_t BL0906_RMSOS_6 = 0x7F;     // 有效值偏置校正寄存器地址,通道6
+static const uint8_t BL0906_RMSGN_1 = 0x6D;  // 有效值增益调整寄存器地址,通道1
+static const uint8_t BL0906_RMSGN_2 = 0x6E;  // 有效值增益调整寄存器地址,通道2
+static const uint8_t BL0906_RMSGN_3 = 0x6F;  // 有效值增益调整寄存器地址,通道3
+static const uint8_t BL0906_RMSGN_4 = 0x70;  // 有效值增益调整寄存器地址,通道4
+static const uint8_t BL0906_RMSGN_5 = 0x73;  // 有效值增益调整寄存器地址,通道5
+static const uint8_t BL0906_RMSGN_6 = 0x74;  // 有效值增益调整寄存器地址,通道6
+
+static const uint8_t BL0906_RMSOS_1 = 0x78;  // 有效值偏置校正寄存器地址,通道1
+static const uint8_t BL0906_RMSOS_2 = 0x79;  // 有效值偏置校正寄存器地址,通道2
+static const uint8_t BL0906_RMSOS_3 = 0x7A;  // 有效值偏置校正寄存器地址,通道3
+static const uint8_t BL0906_RMSOS_4 = 0x7B;  // 有效值偏置校正寄存器地址,通道4
+static const uint8_t BL0906_RMSOS_5 = 0x7E;  // 有效值偏置校正寄存器地址,通道5
+static const uint8_t BL0906_RMSOS_6 = 0x7F;  // 有效值偏置校正寄存器地址,通道6
+
 static const uint8_t BL0906_RST_ENG = 0x9D;     // 能量清零设置寄存器
+static const uint8_t BL0906_USR_WRPROT = 0x9E;  // 用户写保护设置寄存器
 static const uint8_t BL0906_SOFT_RESET = 0x9F;  // 输入为 5A5A5A 时，系统复位
-static const uint8_t BL0906_WATTGN_1 = 0xB7;    // 有功功率增益调整寄存器,通道1
-static const uint8_t BL0906_WATTGN_2 = 0xB8;    // 有功功率增益调整寄存器,通道2
-static const uint8_t BL0906_WATTGN_3 = 0xB9;    // 有功功率增益调整寄存器,通道3
-static const uint8_t BL0906_WATTGN_4 = 0xBA;    // 有功功率增益调整寄存器,通道4
-static const uint8_t BL0906_WATTGN_5 = 0xBD;    // 有功功率增益调整寄存器,通道5
-static const uint8_t BL0906_WATTGN_6 = 0xBE;    // 有功功率增益调整寄存器,通道6
+
+static const uint8_t BL0906_WATTGN_1 = 0xB7;  // 有功功率增益调整寄存器,通道1
+static const uint8_t BL0906_WATTGN_2 = 0xB8;  // 有功功率增益调整寄存器,通道2
+static const uint8_t BL0906_WATTGN_3 = 0xB9;  // 有功功率增益调整寄存器,通道3
+static const uint8_t BL0906_WATTGN_4 = 0xBA;  // 有功功率增益调整寄存器,通道4
+static const uint8_t BL0906_WATTGN_5 = 0xBD;  // 有功功率增益调整寄存器,通道5
+static const uint8_t BL0906_WATTGN_6 = 0xBE;  // 有功功率增益调整寄存器,通道6
+
+const uint8_t BL0906_INIT[2][6] = {
+    // Reset to default
+    {BL0906_WRITE_COMMAND, BL0906_SOFT_RESET, 0x5A, 0x5A, 0x5A, 0x52},
+    // Enable User Operation Write
+    {BL0906_WRITE_COMMAND, BL0906_USR_WRPROT, 0x55, 0x55, 0x00, 0xB7}};
 
 void BL0906::loop() { handleActionCallback(); }
 
 void BL0906::setup() {
-  // 此处可校正BL0906电参数。
-  while (this->available())
-    this->flush();
+  for (auto *i : BL0906_INIT) {
+    this->write_array(i, 6);
+    delay(1);
+  }
+  this->flush();
 
-  this->write_array(USR_WRPROT_Witable, sizeof(USR_WRPROT_Witable));  // 用户寄存器可操作指令
   // 电参数校正（参数1：寄存器地址；参数2：校正前值；参数3：校正后值、电参数值与寄存器值的转换系数)
-  Bias_correction(BL0906_RMSOS_1, 0.01800, 0);  // 电流有效值偏置校正，通道1
+  Bias_correction(BL0906_RMSOS_1, 0.02900, 0);  // 电流有效值偏置校正，通道1
   Bias_correction(BL0906_RMSOS_2, 0.02700, 0);  // 电流有效值偏置校正，通道2
   Bias_correction(BL0906_RMSOS_3, 0.02900, 0);  // 电流有效值偏置校正，通道3
   Bias_correction(BL0906_RMSOS_4, 0.03800, 0);  // 电流有效值偏置校正，通道4
   Bias_correction(BL0906_RMSOS_5, 0.03500, 0);  // 电流有效值偏置校正，通道5
   Bias_correction(BL0906_RMSOS_6, 0.03300, 0);  // 电流有效值偏置校正，通道6
+
   // gain_correction(BL0906_RMSGN_1, 2.15000, 2.148, BL0906_ki);//电流有效值增益调整，通道1
   // gain_correction(BL0906_RMSGN_2, 2.15100, 2.148, BL0906_ki);//电流有效值增益调整，通道2
   // gain_correction(BL0906_RMSGN_3, 2.15200, 2.148, BL0906_ki);//电流有效值增益调整，通道3
   // gain_correction(BL0906_RMSGN_4, 2.14500, 2.148, BL0906_ki);//电流有效值增益调整，通道4
   // gain_correction(BL0906_RMSGN_5, 2.14600, 2.148, BL0906_ki);//电流有效值增益调整，通道5
   // gain_correction(BL0906_RMSGN_6, 2.14600, 2.148, BL0906_ki);//电流有效值增益调整，通道6
+
   // gain_correction(BL0906_WATTGN_1, 15.13427, 14.5, BL0906_Kp);//功率增益调整，通道1
   // gain_correction(BL0906_WATTGN_2, 15.23937, 14.5, BL0906_Kp);//功率增益调整，通道2
   // gain_correction(BL0906_WATTGN_3, 15.44956, 14.5, BL0906_Kp);//功率增益调整，通道3
   // gain_correction(BL0906_WATTGN_4, 16.57646, 14.5, BL0906_Kp);//功率增益调整，通道4
   // gain_correction(BL0906_WATTGN_5, 15.27440, 14.5, BL0906_Kp);//功率增益调整，通道5
   // gain_correction(BL0906_WATTGN_6, 31.75744, 14.5, BL0906_Kp);//功率增益调整，通道6
-  this->write_array(USR_WRPROT_Onlyread, sizeof(USR_WRPROT_Onlyread));  // 用户寄存器只读指令
 }
 
 void BL0906::update() {
@@ -114,6 +128,9 @@ void BL0906::update() {
   read_data(BL0906_CF_5_CNT, energy_reference_, energy_sensor_5_);             // 电量。通道5
   read_data(BL0906_CF_6_CNT, energy_reference_, energy_sensor_6_);             // 电量。通道6
   read_data(BL0906_CF_SUM_CNT, sum_energy_reference_, energy_sensor_sum_);     // 电量。通道总和
+
+  ESP_LOGV(TAG, "BL0906: U %fV, I1 %fA, P %fW, Cnt %" PRId32 ", ∫P %fkWh, frequency %fHz", *voltage_sensor_,
+           *current_sensor_1_, *power_sensor_sum_, *energy_sensor_1_, *energy_sensor_sum_, *frequency_sensor_);
 }
 
 // 校验和。SUM 字节为（Addr+Data_L+Data_M+Data_H）&0xFF 取反
@@ -150,25 +167,12 @@ void BL0906::handleActionCallback() {
 }
 
 void BL0906::reset_energy_() {
-  this->write_array(USR_WRPROT_Witable, sizeof(USR_WRPROT_Witable));  // 用户寄存器可操作指令
+  const uint8_t BL0906_RST[6] = {BL0906_WRITE_COMMAND, BL0906_RST_ENG, 0x00, 0x00, 0x00, 0x62};
+  this->write_array(BL0906_RST, 6);
+  delay(1);
+  this->flush();
 
-  // Bit[12:0]设置为 1 时，电能相关寄存器 Reg3B~2F 设置为读后清零。
-  uint8_t address = BL0906_RST_ENG;
-  DataPacket data = {};
-  data.h = 0;
-  data.m = 0x0F;
-  data.l = 0xFF;
-  data.address = address;
-  data.checksum = bl0906_checksum(address, &data);
-
-  ESP_LOGW(TAG, "RMSOS:%02X%02X%02X%02X%02X%02X", BL0906_WRITE_COMMAND, address, data.l, data.m, data.h, data.address);
-  this->write_byte(BL0906_WRITE_COMMAND);
-  this->write_byte(address);
-  this->write_byte(data.l);  // Bit[7:0]
-  this->write_byte(data.m);  // Bit[12:8]
-  this->write_byte(data.h);
-  this->write_byte(data.checksum);
-  this->write_array(USR_WRPROT_Onlyread, sizeof(USR_WRPROT_Onlyread));  // 用户寄存器只读指令
+  ESP_LOGW(TAG, "RMSOS:%02X%02X%02X%02X%02X%02X", BL0906_WRITE_COMMAND, BL0906_RST_ENG, 0xFF, 0x0F, 0x00, 0x54);
 }
 
 // 读取数据

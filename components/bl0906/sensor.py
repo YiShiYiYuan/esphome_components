@@ -71,7 +71,7 @@ CONFIG_SCHEMA = (
                 accuracy_decimals=3, device_class="power", unit_of_measurement="W"
             ),
             cv.Optional("Energy_1"): sensor.sensor_schema(
-                accuracy_decimals=2,
+                accuracy_decimals=3,
                 device_class="energy",
                 state_class="total",
                 unit_of_measurement="kWh",
