@@ -1,0 +1,151 @@
+{%- set id_prefix = "power6" -%}
+{%- set name_prefix = "AP" -%}
+{%- set names = ["Lighting", "Outlets", "Kitchen", "LivingAC", "BedroomAC", "Permanet", "sum"] -%}
+{%- set channels = ["1", "2", "3", "4", "5", "6", "sum"] -%}
+{%- set channels_nosum = ["1", "2", "3", "4", "5", "6"] -%}
+
+external_components:
+  # - source:
+  #     type: local
+  #     path: mycomponents
+  #   components: [ bl0906 ]
+
+  - source: github://yishiyiyuan/esphome_components
+    components: [ bl0906 ]
+
+  # https://github.com/esphome/issues/issues/5793
+  - source: github://esphome/esphome@2024.4.2
+    components: [ web_server, web_server_base ]
+
+logger:
+  level: DEBUG
+  logs:
+    sensor: NONE
+  baud_rate: 0
+
+captive_portal:
+
+uart:
+  tx_pin: GPIO1
+  rx_pin: GPIO3
+  baud_rate: 19200
+  id: utt2
+
+sensor:
+  - platform: uptime
+    name: uptime
+
+  - platform: bl0906
+    id: id_sensor_bl0906
+    # update_interval: 60s
+    frequency:
+      name: '{{ name_prefix}} Frequency'
+    temperature:
+      name: '{{ name_prefix}} Temperature'
+    voltage:
+      name: '{{ name_prefix}} Voltage'
+    {% for ch in channels_nosum -%}
+    current_{{ ch }}:
+      id: {{ id_prefix }}_current_{{ ch }}
+      name: "{{ name_prefix}} Current {{ names[loop.index0] }}"
+    {% endfor %}
+    {% for ch in channels -%}
+    power_{{ ch }}:
+      id: {{ id_prefix }}_power_{{ ch }}
+      name: "{{ name_prefix}} Power {{ names[loop.index0] }}"
+      filters:
+        - lambda: return abs(x);
+    {% endfor %}
+    {% for ch in channels -%}
+    energy_{{ ch }}:
+      id: {{ id_prefix }}_energy_{{ ch }}
+      name: "{{ name_prefix}} Energy Chip {{ names[loop.index0] }}"
+    {% endfor %}
+
+  {% for ch in channels -%}
+  - platform: copy
+    name: "{{ name_prefix}} Energy {{ names[loop.index0] }}"
+    id: {{ id_prefix }}_energy_{{ ch }}_persist
+    source_id: {{ id_prefix }}_energy_{{ ch }}
+    filters:
+      - lambda: |-
+          if(id(id_energy_{{ ch }}_lastvalue) == 0.0)
+          {{ '{' }}
+            id(id_energy_{{ ch }}_lastvalue) = id({{ id_prefix }}_energy_{{ ch }}).state;
+          {{ '}' }}
+
+          if(x < id(id_energy_{{ ch }}_persist))
+          {{ '{' }}
+            float delta =  x - id(id_energy_{{ ch }}_lastvalue);
+            id(id_energy_{{ ch }}_persist) += delta;
+            id(id_energy_{{ ch }}_lastvalue) = x;
+          {{ '}' }} else {{ '{' }}
+            id(id_energy_{{ ch }}_persist) = x;
+          {{ '}' }}
+          return id(id_energy_{{ ch }}_persist);
+  {% endfor %}
+
+  {% for ch in channels -%}
+  - platform: total_daily_energy
+    name: "{{ name_prefix}} Energy {{ names[loop.index0] }} Today"
+    id: {{ id_prefix }}_energy_{{ ch }}_today
+    power_id: {{ id_prefix }}_power_{{ ch }}
+    unit_of_measurement: 'kWh'
+    state_class: total_increasing
+    device_class: energy
+    restore: true
+    accuracy_decimals: 3
+    filters: # Multiplication factor from W to kW is 0.001
+      - multiply: 0.001
+  {% endfor %}
+
+button:
+  # 重启 ESP
+  - platform: restart
+    id: {{ id_prefix }}_button_restart
+    name: "{{ name_prefix}} Restart"
+
+  # 重置esp计算的的每日电度量
+  - platform: template
+    name: "{{ name_prefix}} Reset Energy Today"
+    id: {{ id_prefix }}_button_reset_energy_today
+    entity_category: config
+    on_press:
+      then:
+        - lambda: |-
+        - lambda: |-
+            {% for ch in channels -%}
+            id({{ id_prefix }}_energy_{{ ch }}_today).publish_state_and_save(0.0f);
+            {% endfor %}
+
+  #重置计量芯片寄存器上的电度量
+  - platform: template
+    name: "{{ name_prefix}} Reset Energy Raw"
+    id: {{ id_prefix }}_button_reset_energy_total
+    entity_category: config
+    on_press:
+      then:
+        {% for ch in channels -%}
+        - globals.set:
+            id: id_energy_{{ ch }}_persist
+            value: '0.0'
+        {% endfor %}
+        - bl0906.reset_energy: id_sensor_bl0906
+
+# Enable time component to reset energy at midnight
+time:
+  - platform: homeassistant
+    id: homeassistant_time
+    timezone: "Asia/Shanghai"
+
+globals:
+  {% for ch in channels -%}
+  - id: id_energy_{{ ch }}_persist
+    type: float
+    restore_value: yes
+    initial_value: '0.0'
+  - id: id_energy_{{ ch }}_lastvalue
+    type: float
+    restore_value: no
+    initial_value: '0.0'
+  {% endfor %}
